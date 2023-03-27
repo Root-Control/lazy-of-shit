@@ -22,7 +22,12 @@ const commands = [
 	"'",
 	's/Articles/{{capitalizedPluralModuleName}}/g;s/articles/{{lowerCasedPluralModuleName}}/g;s/Article/{{capitalizedSingularModuleName}}/g;s/article/{{lowerCasedSingularModuleName}}/g',
 	"'", 
-	' {}  ;'
+	' {}  ; && find src/modules/{{pluralRawModuleName}} -type f -exec sed -i ',
+	"'",
+	's/{{lowerCasedPluralModuleName}}\./{{pluralRawModuleName}}\\./g;s/{{lowerCasedSingularModuleName}}\\./{{singularRawModuleName}}./g;',
+	"'", 
+	' {}  ;',
+	` &&  find src/modules/{{pluralRawModuleName}} -type f -exec sed -i "s/{{pluralRawModuleName}}\.)/{{pluralRawModuleName}}')/g" {} \;`
 ];
 
 function pluralizeVariable(variable) {
@@ -83,8 +88,6 @@ function moduleExecution(moduleName) {
 		.replace(/{{capitalizedSingularModuleName}}/g, toPascalCase(moduleName))
 		.replace(/{{lowerCasedSingularModuleName}}/g, toCamelCase(moduleName))
 	
-	console.log(fullCommand)
-
 	exec(fullCommand, (error, stdout, stderr) => {
 		if (error) {
 			console.error(`Error al ejecutar el comando: ${error}`);

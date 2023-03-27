@@ -3,7 +3,7 @@
     "pluralize": "^8.0.0"
   },
   "name": "lazyofshit",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Lazy of shit (you are)",
   "bin": {
     "lazyofshit": "./index.js"
