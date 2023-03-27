@@ -5,6 +5,9 @@ const { exec } = require('child_process');
 const { readFile } = require('fs');
 const pluralize = require('pluralize');
 const { bindNestJsModules } = require('./utils');
+const inquirer = require('inquirer');
+
+let selectedOption;
 
 const commands = [
 	'cp -r src/modules/articles src/modules/{{pluralRawModuleName}} && find src/modules/{{pluralRawModuleName}} -depth -name ',
@@ -26,10 +29,10 @@ const commands = [
 	"'",
 	' {}  ; && find src/modules/{{pluralRawModuleName}} -type f -exec sed -i ',
 	"'",
-	's/{{lowerCasedPluralModuleName}}\./{{pluralRawModuleName}}\\./g;s/{{lowerCasedSingularModuleName}}\\./{{singularRawModuleName}}./g;',
+	's/articlesService/{{lowerCasedPluralModuleName}}Service/g;s/{{lowerCasedPluralModuleName}}\\./{{pluralRawModuleName}}\\./g;s/{{lowerCasedSingularModuleName}}\\./{{singularRawModuleName}}./g;',
 	"'",
 	' {}  ;',
-	` &&  find src/modules/{{pluralRawModuleName}} -type f -exec sed -i "s/{{pluralRawModuleName}}\.)/{{pluralRawModuleName}}')/g" {} \;`
+	` &&  find src/modules/{{pluralRawModuleName}} -type f -exec sed -i "s/{{pluralRawModuleName}}\\.)/{{pluralRawModuleName}}')/g" {} \;`
 ];
 
 function pluralizeVariable(variable) {
@@ -61,46 +64,85 @@ const readline = require('readline').createInterface({
 	output: process.stdout
 });
 
-readline.question('Ingresa nombre de modulo, para multiples modulos, ponlos separados por coma: ', async (modulo) => {
-	if (pluralize.isPlural(modulo)) {
-		console.log('Error, no soportado para plural');
-		return false;
-	}
+const options = [
+	{ name: 'Nestjs' },
+	{ name: 'Angular' },
+];
 
-	if (modulo.includes(',')) {
-		const modulos = modulo.split(',').map((item) => item.trim());
-		for (let i = 0; i < modulos.length; i++) {
-			await moduleExecution(modulos[i]);
+
+
+inquirer
+	.prompt([
+		{
+			type: 'input',
+			name: 'name',
+			message: 'Ingresa nombre de modulo, para multiples modulos, ponlos separados por coma: '
 		}
-	
-	} else {
-		moduleExecution(modulo);
-	}
+	])
+	.then((response) => {
+		const modulo = response.name;
+		inquirer
+			.prompt([
+				{
+					type: 'list',
+					message: 'Elige una opción:',
+					name: 'option',
+					choices: options
+				}
+			])
+			.then(async (response) => {
+				selectedOption = response.option;
 
-	readline.close();
-});
+				if (pluralize.isPlural(modulo)) {
+					console.log('Error, no soportado para plural');
+					return false;
+				}
 
-function moduleExecution(moduleName) {
+				if (modulo.includes(',')) {
+					const modulos = modulo.split(',').map((item) => item.trim());
+					for (let i = 0; i < modulos.length; i++) {
+						await moduleExecution(modulos[i], selectedOption);
+					}
+
+				} else {
+					moduleExecution(modulo, selectedOption);
+				}
+			});
+
+
+	})
+	.catch((error) => {
+		console.error(error);
+	});
+
+
+function moduleExecution(moduleName, selectedOption) {
 	const pluralizedModule = pluralizeVariable(moduleName);
 	return new Promise(async resolve => {
-		const fullCommand = commands.join('')
-		.replace(/{{pluralRawModuleName}}/g, pluralizedModule)
-		.replace(/{{singularRawModuleName}}/g, moduleName)
-		.replace(/{{capitalizedPluralModuleName}}/g, pluralizeVariable(toPascalCase(moduleName)))
-		.replace(/{{lowerCasedPluralModuleName}}/g, pluralizeVariable(toCamelCase(moduleName)))
-		.replace(/{{capitalizedSingularModuleName}}/g, toPascalCase(moduleName))
-		.replace(/{{lowerCasedSingularModuleName}}/g, toCamelCase(moduleName))
+		let fullCommand = commands.join('')
+			.replace(/{{pluralRawModuleName}}/g, pluralizedModule)
+			.replace(/{{singularRawModuleName}}/g, moduleName)
+			.replace(/{{capitalizedPluralModuleName}}/g, pluralizeVariable(toPascalCase(moduleName)))
+			.replace(/{{lowerCasedPluralModuleName}}/g, pluralizeVariable(toCamelCase(moduleName)))
+			.replace(/{{capitalizedSingularModuleName}}/g, toPascalCase(moduleName))
+			.replace(/{{lowerCasedSingularModuleName}}/g, toCamelCase(moduleName))
 
-	exec(fullCommand, async (error, stdout, stderr) => {
-		if (error) {
-			console.error(`Error al ejecutar el comando: ${error}`);
-			return;
-		} else {
-			await bindNestJsModules(`${pluralizeVariable(toPascalCase(moduleName))}Module`,
-				pluralizedModule);
-			resolve();
+		if (selectedOption === 'Angular') {
+			fullCommand = fullCommand.replace(/src\/modules/g, 'src/app/modules');
 		}
-	});
+
+		exec(fullCommand, async (error, stdout, stderr) => {
+			if (error) {
+				console.error(`Error al ejecutar el comando: ${error}`);
+				return;
+			} else {
+				if (selectedOption === 'Nestjs') {
+					await bindNestJsModules(`${pluralizeVariable(toPascalCase(moduleName))}Module`,
+					pluralizedModule);
+				}
+				resolve();
+			}
+		});
 	})
 }
 

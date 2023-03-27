@@ -1,13 +1,14 @@
 {
   "dependencies": {
-    "pluralize": "^8.0.0",
-    "@babel/core": "^7.15.0",
     "@babel/cli": "^7.15.0",
+    "@babel/core": "^7.15.0",
     "@babel/preset-env": "^7.15.0",
-    "@babel/preset-typescript": "^7.15.0"
+    "@babel/preset-typescript": "^7.15.0",
+    "inquirer": "^8.1.0",
+    "pluralize": "^8.0.0"
   },
   "name": "lazyofshit",
-  "version": "1.0.5",
+  "version": "1.1.1",
   "description": "Lazy of shit (you are)",
   "bin": {
     "lazyofshit": "./index.js"
@@ -23,7 +24,10 @@
     "lazy",
     "shit"
   ],
-  "presets": ["@babel/preset-env", "@babel/preset-typescript"],
+  "presets": [
+    "@babel/preset-env",
+    "@babel/preset-typescript"
+  ],
   "author": "Hiroshi",
   "license": "ISC"
 }
