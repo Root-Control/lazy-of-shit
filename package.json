@@ -1,6 +1,10 @@
 {
   "dependencies": {
-    "pluralize": "^8.0.0"
+    "pluralize": "^8.0.0",
+    "@babel/core": "^7.15.0",
+    "@babel/cli": "^7.15.0",
+    "@babel/preset-env": "^7.15.0",
+    "@babel/preset-typescript": "^7.15.0"
   },
   "name": "lazyofshit",
   "version": "1.0.5",
@@ -9,7 +13,9 @@
     "lazyofshit": "./index.js"
   },
   "main": "index.js",
-  "devDependencies": {},
+  "devDependencies": {
+    "ts-node": "^10.9.1"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -17,6 +23,7 @@
     "lazy",
     "shit"
   ],
+  "presets": ["@babel/preset-env", "@babel/preset-typescript"],
   "author": "Hiroshi",
   "license": "ISC"
 }
